@@ -10,3 +10,5 @@ Test priority
 - The change matches the amount required
 - The change is given in the optimal amount of coins
 - Calculating the change doesn't take forever
+
+If you want to do this kata, just fork this repo. My goal is to keep the Master branch a starting point for the Kata, so any attempts at solving the kata should be done in another branch.
