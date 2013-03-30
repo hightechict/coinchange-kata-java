@@ -1,3 +1,13 @@
 package nl.hightech.dojo.coinchangekata;
 
-public class CoinchangerTest {}
+import java.util.HashSet;
+
+import org.junit.Test;
+
+public class CoinchangerTest {
+
+	@Test
+	public void testConstructor() {
+		new Coinchanger(new HashSet<Integer>());
+	}
+}
