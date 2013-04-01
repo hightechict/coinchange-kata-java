@@ -30,10 +30,8 @@ public class Coinchanger implements ICoinchanger {
 
 		while (candidates.size() > 0) {
 			candidates = mutate(candidates);
-			rejectTooMuchChange(candidates, amountInCents);
-			candidates.removeAll(rejects);
 			findBetterMatch(candidates, amountInCents);
-			candidates.removeAll(rejects);
+			rejectTooMuchChange(candidates, amountInCents);
 			rejectSetsLargerOrSameSizeAsBestMatch(candidates);
 			candidates.removeAll(rejects);
 		}
