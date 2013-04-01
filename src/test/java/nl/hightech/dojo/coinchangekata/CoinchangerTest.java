@@ -43,4 +43,24 @@ public class CoinchangerTest {
 		assertEquals(1, change.count(2));
 		assertEquals(1, change.count(5));
 	}
+
+	@Test
+	public void testFourteenCents() {
+		coinchanger = new Coinchanger(Sets.newHashSet(1, 10, 7));
+
+		change = coinchanger.getChangeForAmount(14);
+
+		assertEquals(2, change.size());
+		assertEquals(2, change.count(7));
+	}
+
+	@Test
+	public void testFourhundredTwoCentCoins() {
+		coinchanger = new Coinchanger(Sets.newHashSet(1, 2));
+
+		change = coinchanger.getChangeForAmount(800);
+
+		assertEquals(400, change.size());
+		assertEquals(400, change.count(2));
+	}
 }

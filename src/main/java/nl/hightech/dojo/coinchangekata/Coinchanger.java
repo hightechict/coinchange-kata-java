@@ -6,11 +6,13 @@ import java.util.TreeSet;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
-import com.google.common.collect.Multiset.Entry;
+import com.google.common.collect.Sets;
 
 public class Coinchanger implements ICoinchanger {
 
 	TreeSet<Integer> coinSet;
+	Multiset<Integer> bestmatch;
+	Set<Multiset<Integer>> rejects = Sets.newHashSet();
 
 	public Coinchanger(Set<Integer> coinSet) {
 		this.coinSet = new TreeSet<Integer>(Collections.reverseOrder());
@@ -19,29 +21,69 @@ public class Coinchanger implements ICoinchanger {
 
 	public Multiset<Integer> getChangeForAmount(int amountInCents) {
 
-		Multiset<Integer> change = HashMultiset.create();
+		Set<Multiset<Integer>> candidates = new TreeSet<Multiset<Integer>>(Collections.reverseOrder(new CoinSetComparator()));
+		candidates.add(HashMultiset.<Integer> create());
 
-		while (valueOf(change) < amountInCents) {
-			change.add(largestFittingCoin(amountInCents - valueOf(change)));
+		rejects = Sets.newHashSet();
+
+		bestmatch = null;
+
+		while (candidates.size() > 0) {
+			candidates = mutate(candidates);
+			rejectTooMuchChange(candidates, amountInCents);
+			candidates.removeAll(rejects);
+			findBetterMatch(candidates, amountInCents);
+			candidates.removeAll(rejects);
+			rejectSetsLargerOrSameSizeAsBestMatch(candidates);
+			candidates.removeAll(rejects);
 		}
 
-		return change;
+		return bestmatch;
 	}
 
-	private int largestFittingCoin(int amount) {
+	private Set<Multiset<Integer>> mutate(Set<Multiset<Integer>> candidates) {
+		Multiset<Integer> mutant = candidates.iterator().next();
+
+		candidates.remove(mutant);
+		rejects.add(mutant);
+
 		for (int c : coinSet) {
-			if (c <= amount) return c;
+			Multiset<Integer> child = HashMultiset.create(mutant);
+			child.add(c);
+			candidates.add(child);
 		}
 
-		throw new IllegalArgumentException();
+		return candidates;
 	}
 
-	private static int valueOf(Multiset<Integer> coinSet) {
-		int t = 0;
-		for (Entry<Integer> coin : coinSet.entrySet()) {
-			t += coin.getCount() * coin.getElement();
+	private void rejectTooMuchChange(Set<Multiset<Integer>> candidates, int amountInCents) {
+		for (Multiset<Integer> change : candidates) {
+			if (CoinSetComparator.valueOf(change) > amountInCents) {
+				rejects.add(change);
+			}
 		}
-		return t;
 	}
 
+	private void findBetterMatch(Set<Multiset<Integer>> candidates, int amountInCents) {
+		for (Multiset<Integer> change : candidates) {
+			if (CoinSetComparator.valueOf(change) == amountInCents) {
+				if (bestmatch == null || bestmatch.size() > change.size()) {
+					bestmatch = change;
+					rejects.add(change);
+				} else {
+					rejects.add(change);
+				}
+			}
+		}
+	}
+
+	private void rejectSetsLargerOrSameSizeAsBestMatch(Set<Multiset<Integer>> candidates) {
+		if (bestmatch == null) return;
+
+		for (Multiset<Integer> change : candidates) {
+			if (change.size() >= bestmatch.size()) {
+				rejects.add(change);
+			}
+		}
+	}
 }
