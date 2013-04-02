@@ -23,17 +23,19 @@ public class Coinchanger implements ICoinchanger {
 
 		Set<Multiset<Integer>> candidates = new TreeSet<Multiset<Integer>>(Collections.reverseOrder(new CoinSetComparator()));
 		candidates.add(HashMultiset.<Integer> create());
+		Set<Multiset<Integer>> mutants;
 
 		rejects = Sets.newHashSet();
 
 		bestmatch = null;
 
 		while (candidates.size() > 0) {
-			candidates = mutate(candidates);
-			findBetterMatch(candidates, amountInCents);
-			rejectTooMuchChange(candidates, amountInCents);
-			rejectSetsLargerOrSameSizeAsBestMatch(candidates);
-			candidates.removeAll(rejects);
+			mutants = mutate(candidates);
+			findBetterMatch(mutants, amountInCents);
+			rejectTooMuchChange(mutants, amountInCents);
+			rejectSetsLargerOrSameSizeAsBestMatch(mutants);
+			mutants.removeAll(rejects);
+			candidates.addAll(mutants);
 		}
 
 		return bestmatch;
@@ -41,6 +43,7 @@ public class Coinchanger implements ICoinchanger {
 
 	private Set<Multiset<Integer>> mutate(Set<Multiset<Integer>> candidates) {
 		Multiset<Integer> mutant = candidates.iterator().next();
+		Set<Multiset<Integer>> children = Sets.newHashSet();
 
 		candidates.remove(mutant);
 		rejects.add(mutant);
@@ -48,10 +51,10 @@ public class Coinchanger implements ICoinchanger {
 		for (int c : coinSet) {
 			Multiset<Integer> child = HashMultiset.create(mutant);
 			child.add(c);
-			candidates.add(child);
+			children.add(child);
 		}
 
-		return candidates;
+		return children;
 	}
 
 	private void rejectTooMuchChange(Set<Multiset<Integer>> candidates, int amountInCents) {
